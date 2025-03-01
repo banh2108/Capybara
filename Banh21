@@ -5,130 +5,134 @@ local function StartKillAura()
         local Workspace = game:GetService("Workspace")
         local LocalPlayer = Players.LocalPlayer
 
-        -- **Chờ nhân vật tải xong**
-        repeat task.wait() until LocalPlayer.Character
-        local Character = LocalPlayer.Character
-        local RootPart = Character:FindFirstChild("HumanoidRootPart")
+        -- **Chờ nhân vật tải xong**  
+        repeat task.wait() until LocalPlayer.Character  
+        local Character = LocalPlayer.Character  
+        local RootPart = Character:FindFirstChild("HumanoidRootPart")  
 
-        -- **Cập nhật RootPart khi nhân vật reset**
-        LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-            Character = newCharacter
-            repeat task.wait() until Character:FindFirstChild("HumanoidRootPart")
-            RootPart = Character:FindFirstChild("HumanoidRootPart")
-        end)
+        -- **Cập nhật RootPart khi nhân vật reset**  
+        LocalPlayer.CharacterAdded:Connect(function(newCharacter)  
+            Character = newCharacter  
+            repeat task.wait() until Character:FindFirstChild("HumanoidRootPart")  
+            RootPart = Character:FindFirstChild("HumanoidRootPart")  
+        end)  
 
-        if not RootPart then return end
+        if not RootPart then return end  
 
-        -- **Tìm MonsterService**
-        local function GetMonsterService()
-            local success, service = pcall(function()
-                return ReplicatedStorage:WaitForChild("Packages", 5)
-                    :WaitForChild("Knit", 5)
-                    :WaitForChild("Services", 5)
-                    :WaitForChild("MonsterService", 5)
-                    :WaitForChild("RF", 5)
-            end)
-            return success and service or nil
-        end
+        -- **Tìm MonsterService**  
+        local function GetMonsterService()  
+            local success, service = pcall(function()  
+                return ReplicatedStorage:WaitForChild("Packages", 5)  
+                    :WaitForChild("Knit", 5)  
+                    :WaitForChild("Services", 5)  
+                    :WaitForChild("MonsterService", 5)  
+                    :WaitForChild("RF", 5)  
+            end)  
+            return success and service or nil  
+        end  
 
-        local MonsterService = GetMonsterService()
-        if not MonsterService then
-            warn("⚠️ Không tìm thấy MonsterService, dừng script.")
-            return
-        end
+        local MonsterService = GetMonsterService()  
+        if not MonsterService then  
+            warn("⚠️ Không tìm thấy MonsterService, dừng script.")  
+            return  
+        end  
 
-        local RequestAttack = MonsterService:FindFirstChild("RequestAttack")
-        if not RequestAttack then
-            warn("⚠️ Không tìm thấy RequestAttack, dừng script.")
-            return
-        end
+        local RequestAttack = MonsterService:FindFirstChild("RequestAttack")  
+        if not RequestAttack then  
+            warn("⚠️ Không tìm thấy RequestAttack, dừng script.")  
+            return  
+        end  
 
-        -- **Danh sách quái hợp lệ**
-        local ValidTargets = {
-            ["Ironbaba"] = true, ["Acorn"] = true, ["Apple"] = true, ["Aquarion"] = true, ["Axolotibara"] = true,
-            ["BOSSBOT"] = true, ["Birdibara"] = true, ["Bullibara"] = true, ["Cap-bara"] = true, ["Capysaurus"] = true,
-            ["Cog"] = true, ["Cowzilla"] = true, ["Dinovine"] = true, ["Dog"] = true, ["Dragon Nest"] = true,
-            ["Giant Mushroom"] = true, ["Golden Apple"] = true, ["Pignite"] = true, ["Peepkin"] = true, ["Orange"] = true
-        }
+        -- **Danh sách quái hợp lệ (đã thêm mục tiêu mới)**  
+        local ValidTargets = {  
+            ["Ironbaba"] = true, ["Acorn"] = true, ["Apple"] = true, ["Aquarion"] = true, ["Axolotibara"] = true,  
+            ["BOSSBOT"] = true, ["Birdibara"] = true, ["Bullibara"] = true, ["Cap-bara"] = true, ["Capysaurus"] = true,  
+            ["Cog"] = true, ["Cowzilla"] = true, ["Dinovine"] = true, ["Dog"] = true, ["Dragon Nest"] = true,  
+            ["Giant Mushroom"] = true, ["Golden Apple"] = true, ["Pignite"] = true, ["Peepkin"] = true, ["Orange"] = true,  
+            -- **Mục tiêu mới**  
+            ["Oyster"] = true, ["Pear"] = true, ["Pinkaroo"] = true, ["Pinkpurr"] = true, ["Raptor"] = true,  
+            ["Rocky"] = true, ["Screw"] = true, ["Sea Urchin"] = true, ["Turbobara"] = true, ["Vault"] = true,  
+            ["Tall Capy"] = true, ["Treasure"] = true, ["Wonkybara"] = true  
+        }  
 
-        local KillRadius = 40 -- **Bán kính Kill Aura**
-        local AttackCooldown = 0.05 -- **Giảm tải server**
-        
-        -- **Tạo vòng tròn hiển thị Kill Aura**
-        local KillAuraDisplay = Instance.new("Part")
-        KillAuraDisplay.Shape = Enum.PartType.Ball
-        KillAuraDisplay.Size = Vector3.new(KillRadius * 2, 0.5, KillRadius * 2)
-        KillAuraDisplay.Material = Enum.Material.ForceField
-        KillAuraDisplay.Transparency = 0.7
-        KillAuraDisplay.Color = Color3.fromRGB(255, 0, 0)
-        KillAuraDisplay.Anchored = true
-        KillAuraDisplay.CanCollide = false
-        KillAuraDisplay.Parent = Workspace
+        local KillRadius = 40 -- **Bán kính Kill Aura**  
+        local AttackCooldown = 0.05 -- **Giảm tải server**  
+          
+        -- **Tạo vòng tròn hiển thị Kill Aura**  
+        local KillAuraDisplay = Instance.new("Part")  
+        KillAuraDisplay.Shape = Enum.PartType.Ball  
+        KillAuraDisplay.Size = Vector3.new(KillRadius * 2, 0.5, KillRadius * 2)  
+        KillAuraDisplay.Material = Enum.Material.ForceField  
+        KillAuraDisplay.Transparency = 0.7  
+        KillAuraDisplay.Color = Color3.fromRGB(255, 0, 0)  
+        KillAuraDisplay.Anchored = true  
+        KillAuraDisplay.CanCollide = false  
+        KillAuraDisplay.Parent = Workspace  
 
-        -- **Hủy vòng tròn nếu người chơi rời game**
-        LocalPlayer.CharacterRemoving:Connect(function()
-            if KillAuraDisplay then
-                KillAuraDisplay:Destroy()
-            end
-        end)
+        -- **Hủy vòng tròn nếu người chơi rời game**  
+        LocalPlayer.CharacterRemoving:Connect(function()  
+            if KillAuraDisplay then  
+                KillAuraDisplay:Destroy()  
+            end  
+        end)  
 
-        -- **Hàm tìm quái gần nhất**
-        local function GetNearestEnemy()
-            local nearestTarget = nil
-            local minDistance = KillRadius
+        -- **Hàm tìm quái gần nhất**  
+        local function GetNearestEnemy()  
+            local nearestTarget = nil  
+            local minDistance = KillRadius  
 
-            for _, obj in ipairs(Workspace:GetChildren()) do
-                if obj:IsA("Model") and ValidTargets[obj.Name] then
-                    local humanoid = obj:FindFirstChildWhichIsA("Humanoid")
-                    local hrp = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head")
+            for _, obj in ipairs(Workspace:GetChildren()) do  
+                if obj:IsA("Model") and ValidTargets[obj.Name] then  
+                    local humanoid = obj:FindFirstChildWhichIsA("Humanoid")  
+                    local hrp = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head")  
 
-                    if humanoid and humanoid.Health > 0 and hrp then
-                        local distance = (hrp.Position - RootPart.Position).Magnitude
-                        if distance <= minDistance then
-                            minDistance = distance
-                            nearestTarget = hrp
-                        end
-                    end
-                end
-            end
+                    if humanoid and humanoid.Health > 0 and hrp then  
+                        local distance = (hrp.Position - RootPart.Position).Magnitude  
+                        if distance <= minDistance then  
+                            minDistance = distance  
+                            nearestTarget = hrp  
+                        end  
+                    end  
+                end  
+            end  
 
-            return nearestTarget
-        end
+            return nearestTarget  
+        end  
 
-        -- **Vòng lặp tấn công quái liên tục**
-        while true do
-            task.wait(AttackCooldown)
+        -- **Vòng lặp tấn công quái liên tục**  
+        while true do  
+            task.wait(AttackCooldown)  
 
-            if not RootPart or not RootPart.Parent then
-                RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
-                if not RootPart then return end
-            end
+            if not RootPart or not RootPart.Parent then  
+                RootPart = Character and Character:FindFirstChild("HumanoidRootPart")  
+                if not RootPart then return end  
+            end  
 
-            -- **Cập nhật vị trí vòng tròn Kill Aura**
-            KillAuraDisplay.Position = RootPart.Position - Vector3.new(0, 3, 0)
+            -- **Cập nhật vị trí vòng tròn Kill Aura**  
+            KillAuraDisplay.Position = RootPart.Position - Vector3.new(0, 3, 0)  
 
-            -- **Tìm quái gần nhất**
-            local targetHRP = GetNearestEnemy()
+            -- **Tìm quái gần nhất**  
+            local targetHRP = GetNearestEnemy()  
 
-            if targetHRP then
-                -- **Xoay nhân vật về hướng quái**
-                local direction = (targetHRP.Position - RootPart.Position).unit
-                RootPart.CFrame = CFrame.lookAt(RootPart.Position, RootPart.Position + Vector3.new(direction.X, 0, direction.Z))
+            if targetHRP then  
+                -- **Xoay nhân vật về hướng quái**  
+                local direction = (targetHRP.Position - RootPart.Position).unit  
+                RootPart.CFrame = CFrame.lookAt(RootPart.Position, RootPart.Position + Vector3.new(direction.X, 0, direction.Z))  
 
-                -- **Tấn công quái**
-                pcall(function()
-                    RequestAttack:InvokeServer(targetHRP.CFrame)
-                end)
-            end
-        end
+                -- **Tấn công quái**  
+                pcall(function()  
+                    RequestAttack:InvokeServer(targetHRP.CFrame)  
+                end)  
+            end  
+        end  
     end)
 end
 
--- **Tự động restart script ngay lập tức nếu bị dừng**
-while true do
-    local success, err = pcall(StartKillAura)
-    if not success then
-        warn("⚠️ Script gặp lỗi: ", err)
-    end
-    task.wait(1) -- **Chạy lại nếu bị lỗi, nhưng giảm spam**
+-- **Tự động restart script ngay lập tức nếu bị dừng**  
+while true do  
+    local success, err = pcall(StartKillAura)  
+    if not success then  
+        warn("⚠️ Script gặp lỗi: ", err)  
+    end  
+    task.wait(1) -- **Chạy lại nếu bị lỗi, nhưng giảm spam**  
 end
