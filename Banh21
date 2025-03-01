@@ -13,8 +13,8 @@ local function StartKillAura()
         -- **Cập nhật RootPart khi nhân vật reset**  
         LocalPlayer.CharacterAdded:Connect(function(newCharacter)  
             Character = newCharacter  
-            repeat task.wait() until Character:FindFirstChild("HumanoidRootPart")  
-            RootPart = Character:FindFirstChild("HumanoidRootPart")  
+            repeat task.wait() until newCharacter:FindFirstChild("HumanoidRootPart")  
+            RootPart = newCharacter:FindFirstChild("HumanoidRootPart")  
         end)  
 
         if not RootPart then return end  
@@ -43,7 +43,7 @@ local function StartKillAura()
             return  
         end  
 
-        -- **Danh sách quái hợp lệ (đã thêm mục tiêu mới)**  
+        -- **Danh sách quái hợp lệ**  
         local ValidTargets = {  
             ["Ironbaba"] = true, ["Acorn"] = true, ["Apple"] = true, ["Aquarion"] = true, ["Axolotibara"] = true,  
             ["BOSSBOT"] = true, ["Birdibara"] = true, ["Bullibara"] = true, ["Cap-bara"] = true, ["Capysaurus"] = true,  
@@ -76,10 +76,9 @@ local function StartKillAura()
             end  
         end)  
 
-        -- **Hàm tìm quái gần nhất**  
-        local function GetNearestEnemy()  
-            local nearestTarget = nil  
-            local minDistance = KillRadius  
+        -- **Hàm tìm tất cả quái trong phạm vi**  
+        local function GetEnemiesInRange()  
+            local enemies = {}
 
             for _, obj in ipairs(Workspace:GetChildren()) do  
                 if obj:IsA("Model") and ValidTargets[obj.Name] then  
@@ -88,15 +87,14 @@ local function StartKillAura()
 
                     if humanoid and humanoid.Health > 0 and hrp then  
                         local distance = (hrp.Position - RootPart.Position).Magnitude  
-                        if distance <= minDistance then  
-                            minDistance = distance  
-                            nearestTarget = hrp  
+                        if distance <= (KillRadius + 10) then -- **Tăng phạm vi kiểm tra**
+                            table.insert(enemies, hrp)
                         end  
                     end  
                 end  
             end  
 
-            return nearestTarget  
+            return enemies  
         end  
 
         -- **Vòng lặp tấn công quái liên tục**  
@@ -111,18 +109,23 @@ local function StartKillAura()
             -- **Cập nhật vị trí vòng tròn Kill Aura**  
             KillAuraDisplay.Position = RootPart.Position - Vector3.new(0, 3, 0)  
 
-            -- **Tìm quái gần nhất**  
-            local targetHRP = GetNearestEnemy()  
+            -- **Lấy danh sách quái gần nhất**  
+            local enemies = GetEnemiesInRange()  
 
-            if targetHRP then  
-                -- **Xoay nhân vật về hướng quái**  
-                local direction = (targetHRP.Position - RootPart.Position).unit  
-                RootPart.CFrame = CFrame.lookAt(RootPart.Position, RootPart.Position + Vector3.new(direction.X, 0, direction.Z))  
+            for _, targetHRP in pairs(enemies) do  
+                if RootPart then  
+                    -- **Xoay nhân vật về hướng quái gần nhất**  
+                    local direction = (targetHRP.Position - RootPart.Position)  
+                    if direction.Magnitude > 0 then  
+                        direction = direction.unit  
+                        RootPart.CFrame = CFrame.lookAt(RootPart.Position, RootPart.Position + Vector3.new(direction.X, 0, direction.Z))  
+                    end  
 
-                -- **Tấn công quái**  
-                pcall(function()  
-                    RequestAttack:InvokeServer(targetHRP.CFrame)  
-                end)  
+                    -- **Tấn công quái**  
+                    pcall(function()  
+                        RequestAttack:InvokeServer(targetHRP.CFrame)  
+                    end)  
+                end  
             end  
         end  
     end)
