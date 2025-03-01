@@ -65,9 +65,20 @@ local function StartKillAura()
                     local humanoid = obj:FindFirstChildWhichIsA("Humanoid")  
                     local hrp = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head")  
 
-                    if humanoid and humanoid.Health > 0 and hrp then  
+                    -- **Loại bỏ bản thân ra khỏi danh sách mục tiêu**
+                    if humanoid and humanoid.Health > 0 and hrp and obj ~= Character then  
                         local distance = (hrp.Position - RootPart.Position).Magnitude  
-                        if distance <= KillRadius then  
+
+                        -- **Nếu có capybara trùng tên quái, chỉ tấn công nếu nó không phải nhân vật người chơi**
+                        local isPlayerCharacter = false
+                        for _, player in ipairs(Players:GetPlayers()) do
+                            if player.Character == obj then
+                                isPlayerCharacter = true
+                                break
+                            end
+                        end
+
+                        if distance <= KillRadius and not isPlayerCharacter then  
                             table.insert(enemies, {hrp = hrp, humanoid = humanoid, distance = distance})  
                         end  
                     end  
