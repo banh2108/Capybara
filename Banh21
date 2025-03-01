@@ -8,11 +8,13 @@ local function StartKillAura()
         repeat task.wait() until LocalPlayer.Character  
         local Character = LocalPlayer.Character  
         local RootPart = Character:FindFirstChild("HumanoidRootPart")  
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
 
         LocalPlayer.CharacterAdded:Connect(function(newCharacter)  
             Character = newCharacter  
             repeat task.wait() until newCharacter:FindFirstChild("HumanoidRootPart")  
             RootPart = newCharacter:FindFirstChild("HumanoidRootPart")  
+            Humanoid = newCharacter:FindFirstChildOfClass("Humanoid")
         end)  
 
         if not RootPart then return end  
@@ -51,7 +53,10 @@ local function StartKillAura()
         }  
 
         local KillRadius = 50  
-        local AttackCooldown = 0.01 -- **Tốc độ tấn công nhanh hơn**  
+        local AttackCooldown = 0.01  
+        local CurrentTarget = nil  
+        local LastPosition = RootPart.Position  
+        local IsMoving = false  
 
         local function GetEnemiesInRange()  
             local enemies = {}
@@ -63,11 +68,17 @@ local function StartKillAura()
                     if humanoid and humanoid.Health > 0 and hrp then  
                         local distance = (hrp.Position - RootPart.Position).Magnitude  
                         if distance <= KillRadius then  
-                            table.insert(enemies, hrp)
+                            table.insert(enemies, {hrp = hrp, humanoid = humanoid, distance = distance})  
                         end  
                     end  
                 end  
             end  
+
+            -- Sắp xếp danh sách theo khoảng cách gần nhất  
+            table.sort(enemies, function(a, b)  
+                return a.distance < b.distance  
+            end)  
+
             return enemies  
         end  
 
@@ -77,10 +88,34 @@ local function StartKillAura()
                 if not RootPart then return end  
             end  
 
-            local enemies = GetEnemiesInRange()  
+            -- Kiểm tra nếu nhân vật đang di chuyển  
+            local CurrentPosition = RootPart.Position  
+            IsMoving = (CurrentPosition - LastPosition).Magnitude > 0.1  
+            LastPosition = CurrentPosition  
 
-            for _, targetHRP in ipairs(enemies) do  
-                if RootPart then  
+            -- Nếu đang di chuyển, đổi mục tiêu liên tục  
+            if IsMoving then  
+                local enemies = GetEnemiesInRange()  
+                if #enemies > 0 then  
+                    CurrentTarget = enemies[1] -- Chọn mục tiêu gần nhất phía trước  
+                else  
+                    CurrentTarget = nil  
+                end  
+            else  
+                -- Nếu đứng yên, giữ mục tiêu hiện tại  
+                if CurrentTarget then  
+                    local targetHRP, targetHumanoid = CurrentTarget.hrp, CurrentTarget.humanoid  
+                    local distance = (targetHRP.Position - RootPart.Position).Magnitude  
+                    if not targetHRP or not targetHRP.Parent or targetHumanoid.Health <= 0 or distance > KillRadius then  
+                        CurrentTarget = nil  
+                    end  
+                end  
+            end  
+
+            -- Tấn công mục tiêu nếu có  
+            if CurrentTarget then  
+                local targetHRP = CurrentTarget.hrp  
+                if RootPart and targetHRP then  
                     local direction = (targetHRP.Position - RootPart.Position)  
                     if direction.Magnitude > 0 then  
                         direction = direction.unit  
@@ -92,7 +127,8 @@ local function StartKillAura()
                     end)  
                 end  
             end  
-            task.wait(AttackCooldown) -- **Giữ tốc độ tấn công cao**  
+
+            task.wait(AttackCooldown)  
         end  
     end)
 end
@@ -102,5 +138,5 @@ while true do
     if not success then  
         warn("⚠️ Script gặp lỗi: ", err)  
     end  
-    task.wait(0.5) -- **Giảm delay restart**  
+    task.wait(0.5)  
 end
