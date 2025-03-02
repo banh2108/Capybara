@@ -42,43 +42,33 @@ local function StartKillAura()
             return  
         end  
 
-        local ValidTargets = {  
-            ["Ironbaba"] = true, ["Acorn"] = true, ["Apple"] = true, ["Aquarion"] = true, ["Axolotibara"] = true,  
-            ["BOSSBOT"] = true, ["Birdibara"] = true, ["Bullibara"] = true, ["Cap-bara"] = true, ["Capysaurus"] = true,  
-            ["Cog"] = true, ["Cowzilla"] = true, ["Dinovine"] = true, ["Dog"] = true, ["Dragon Nest"] = true,  
-            ["Giant Mushroom"] = true, ["Golden Apple"] = true, ["Pignite"] = true, ["Peepkin"] = true, ["Orange"] = true,  
-            ["Oyster"] = true, ["Pear"] = true, ["Pinkaroo"] = true, ["Pinkpurr"] = true, ["Raptor"] = true,  
-            ["Rocky"] = true, ["Screw"] = true, ["Sea Urchin"] = true, ["Turbobara"] = true, ["Vault"] = true,  
-            ["Tall Capy"] = true, ["Treasure"] = true, ["Wonkybara"] = true  
-        }  
-
         local KillRadius = 50  
         local AttackCooldown = 0.01  
         local CurrentTarget = nil  
         local LastPosition = RootPart.Position  
         local IsMoving = false  
 
+        -- **Hàm lấy danh sách quái vật trong Workspace có Humanoid**
         local function GetEnemiesInRange()  
             local enemies = {}
             for _, obj in ipairs(Workspace:GetChildren()) do  
-                if obj:IsA("Model") and ValidTargets[obj.Name] then  
-                    local humanoid = obj:FindFirstChildWhichIsA("Humanoid")  
+                if obj:IsA("Model") and obj ~= Character then  
+                    local humanoid = obj:FindFirstChildOfClass("Humanoid")  
                     local hrp = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Head")  
 
-                    -- **Loại bỏ bản thân ra khỏi danh sách mục tiêu**
-                    if humanoid and humanoid.Health > 0 and hrp and obj ~= Character then  
-                        local distance = (hrp.Position - RootPart.Position).Magnitude  
-
-                        -- **Nếu có capybara trùng tên quái, chỉ tấn công nếu nó không phải nhân vật người chơi**
-                        local isPlayerCharacter = false
-                        for _, player in ipairs(Players:GetPlayers()) do
-                            if player.Character == obj then
-                                isPlayerCharacter = true
-                                break
-                            end
+                    -- **Chỉ lấy quái vật, bỏ qua người chơi**
+                    local isPlayer = false
+                    for _, player in ipairs(Players:GetPlayers()) do
+                        if player.Character == obj then
+                            isPlayer = true
+                            break
                         end
+                    end
 
-                        if distance <= KillRadius and not isPlayerCharacter then  
+                    -- **Nếu có Humanoid, còn máu, trong bán kính và không phải người chơi**
+                    if humanoid and humanoid.Health > 0 and hrp and not isPlayer then  
+                        local distance = (hrp.Position - RootPart.Position).Magnitude  
+                        if distance <= KillRadius then  
                             table.insert(enemies, {hrp = hrp, humanoid = humanoid, distance = distance})  
                         end  
                     end  
